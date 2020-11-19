@@ -1,0 +1,15 @@
+[book]
+authors = ["PrivateRookie"]
+language = "zh-cn"
+multilingual = false
+src = "src"
+title = "How To Proc Macro"
+description = "Rust 过程宏笔记"
+
+[output.html]
+default-theme = "rust"
+git-repository-url = "https://github.com/PrivateRookie/how_to_proc"
+git-repository-icon = "fa-github"
+
+[output.html.search]
+enable = false
