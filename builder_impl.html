@@ -1,0 +1,358 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn" class="sidebar-visible no-js rust">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Builder - 实现 - How To Proc Macro</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="Rust 过程宏笔记">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "rust";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('rust')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="builder_tips.html"><strong aria-hidden="true">1.</strong> Builder - Tips</a></li><li class="chapter-item expanded "><a href="builder_impl.html" class="active"><strong aria-hidden="true">2.</strong> Builder - 实现</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                    </div>
+
+                    <h1 class="menu-title">How To Proc Macro</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/PrivateRookie/how_to_proc" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#builder---实现" id="builder---实现">Builder - 实现</a></h1>
+<h2><a class="header" href="#目标" id="目标">目标</a></h2>
+<p>对于如下一个结构体，使用 <code>Builder</code> 宏可以方便地使用 builder 模式构建结构体“实例”</p>
+<pre><pre class="playground"><code class="language-rust">use derive_builder::Builder;
+
+#[derive(Builder)]
+pub struct Command {
+    executable: String,
+    args: Vec&lt;String&gt;,
+    env: Vec&lt;String&gt;,
+    current_dir: String,
+}
+
+fn main() {
+    // 通过 builder 方法获取一个 builder
+    let mut builder = Command::builder();
+    // builder 自动实现与原结构体字段同名的构建函数
+    builder.executable(&quot;cargo&quot;.to_owned());
+    builder.args(vec![&quot;build&quot;.to_owned(), &quot;--release&quot;.to_owned()]);
+    builder.env(vec![]);
+    builder.current_dir(&quot;..&quot;.to_owned());
+    // 最后调用 build 方法获取构建好的结构体
+    let command = builder.build().unwrap();
+}
+</code></pre></pre>
+<h2><a class="header" href="#实现" id="实现">实现</a></h2>
+<h3><a class="header" href="#思路" id="思路">思路</a></h3>
+<p>不考虑使用宏的情况下，可以创建一个 <code>CommandBuilder</code> 结构体，其实现了 <code>executable</code>, <code>args</code> 和 <code>env</code> 等方法。</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct CommandBuilder {
+    executable: Option&lt;String&gt;,
+    args: Option&lt;Vec&lt;String&gt;&gt;,
+    env: Option&lt;Vec&lt;String&gt;&gt;,
+    current_dir: Option&lt;String&gt;,
+}
+
+impl CommandBuilder {
+    pub fn executable(&amp;mut self, executable: String) -&gt; &amp;mut Self {
+        self.executable = Some(executable);
+        self
+    }
+
+    pub fn args(&amp;mut self, args: Vec&lt;String&gt;) -&gt; &amp;mut Self {
+        self.args = Some(args);
+        self
+    }
+
+    pub fn env(&amp;mut self, env: Vec&lt;String&gt;) -&gt; &amp;mut Self {
+        self.env = Some(env);
+        self
+    }
+
+    pub fn current_dir(&amp;mut self, current_dir: String) -&gt; &amp;mut Self {
+        self.current_dir = Some(current_dir);
+        self
+    }
+
+    pub fn build(&amp;self) -&gt; std::result::Result&lt;Command, &amp;str&gt; {
+        Ok(Command {
+            executable: self.executable.clone().ok_or(&quot;executable is not set&quot;)?,
+            args: self.args.clone().ok_or(&quot;args is not set&quot;)?,
+            env: self.env.clone().ok_or(&quot;env is not set&quot;)?,
+            current_dir: self.current_dir.clone().ok_or(&quot;current_dir is not set&quot;)?,
+        })
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>观察上面实现，我们需要先定义 <code>xxxBuilder</code> 的结构体，这个结构体所有字段名和 <code>xxx</code> 中的一样，但字段类型包了一层
+<code>Option</code>。
+接着相当于遍历 <code>xxx</code> 中的每个字段，为 <code>xxxBuilder</code> 实现同名方法，接着在 <code>build</code> 方法构建出需要的结构体。</p>
+<p><code>macro_rules!</code> 无法为我们实现上面功能，因此需要请出 Rust 中的过程宏(Procedural Macro)。</p>
+<h3><a class="header" href="#过程宏简介" id="过程宏简介">过程宏简介</a></h3>
+<p><strong>ref:</strong> <a href="https://doc.rust-lang.org/reference/procedural-macros.html">Rust Book - Procedural Macro</a></p>
+<p>过程宏同样是对代码进行展开，但它能在编译器对 AST 进行操作，因此可实现更多功能。</p>
+<p>过程宏分为三种形式</p>
+<ol>
+<li>类函数式过程宏(function-like macros)，类似 <code>macro_rules!</code> 创建的宏，如 <code>custom!</code></li>
+<li>推导宏(derive macros)，如 <code>#[derive(CustomDeriv)]</code></li>
+<li>属性宏(derive macros)，如 <code>#[CustomAttributes]</code></li>
+</ol>
+<p>创建过程宏 crate 需要如下几步。</p>
+<pre><code class="language-bash">cargo new --lib &lt;create_name&gt;
+</code></pre>
+<p>接着编辑 crate <code>Cargo.toml</code> 文件, 添加如下设置</p>
+<pre><code class="language-toml">[lib]
+proc-macro = true
+</code></pre>
+<p>如果某个过程宏只是自用，不共享给其他 crate 使用，那是不是可以把他们放入同一个 crate 呢？
+答案是*“不行”*。为什么呢？</p>
+<p>在 Rust Book 中这样描述 crate</p>
+<blockquote>
+<p>A crate is a unit of compilation and linking, as well as versioning, distribution, and runtime loading. </p>
+</blockquote>
+<p>“crate 是 Rust 中的最小编译单位”, 而过程宏是作用是在编译阶段操作 AST，如果要求一个 crate 能在编译自己时对自身 AST 进行映射，
+显然是在为难编译器。</p>
+<p>在进行上面的配置后，编译其会自动提供 <a href="https://doc.rust-lang.org/proc_macro/index.html">proc_macro</a> 依赖，
+这个依赖提供了操作 Rust token 流所需的方法和类型，但操作 AST 是一项繁琐无聊的工作，好在社区大佬 <a href="https://github.com/dtolnay">dtolany</a>
+提供了 <a href="https://github.com/dtolnay/syn">syn</a> 和 <a href="https://github.com/dtolnay/quote">quote</a>两个库方便我们操作 AST。</p>
+<pre><code class="language-toml">[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = &quot;1.0.48&quot;, features = [&quot;extra-traits&quot;] }
+quote = &quot;1.0.7&quot;
+</code></pre>
+<p>syn 提供了 <code>proc_macro::TokenStream</code> 到更高级数据结构如 <code>syn::DeriveInput</code> 解析，而 quote 则可以让我们像写模板一样填充
+一些数据，就可以生产符合 Rust 语法规则的 TokenStream。</p>
+<p>为了方便开发，syn 应该带上 &quot;extra-traits&quot; 特征，方便通过 Debug trait 开发，在正式发布时为了加快编译速度再去掉。</p>
+<p>如果对 syn 不熟悉建议花点时间看看 syn 的 <a href="https://github.com/dtolnay/syn">README.md</a> 和文档，特别是<a href="https://docs.rs/syn/1.0.48/syn/struct.DeriveInput.html">DeriveInput</a>
+文档。</p>
+<p>最后一个非常有用的工具是 <code>cargo-expand</code>, 它可以展示展开后的过程宏，先安装 nightly Rust, 而后 <code>cargo install cargo-expand</code> 即可安装。</p>
+<h3><a class="header" href="#获取被修饰结构体名称" id="获取被修饰结构体名称">获取被修饰结构体名称</a></h3>
+<p>按照 syn README 上的示例和文档可以很方便地获取被修饰结构体名称</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use proc_macro::TokenStream;
+use quote::quote;
+use syn::{parse_macro_input, DeriveInput};
+
+#[proc_macro_derive(Builder)]
+pub fn derive(input: TokenStream) -&gt; TokenStream {
+    // 把 TokenStream 解析为语法树
+    let input = parse_macro_input!(input as DeriveInput);
+    // indent 即为被修饰结构体名称相关数据结构
+    let name = dbg!(input.ident);
+    let bname = format!(&quot;{}Builder&quot;, name);
+    // 构建一个新的 indent
+    let bident = syn::Ident::new(&amp;bname, name.span());
+
+    // 最后填充扩展 AST
+    let expanded = quote! {
+        pub struct #bident {}
+    };
+
+    //把展开后的 AST 返回给编译器
+    TokenStream::from(expanded)
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>在编译使用 Builder 宏的 crate 时应该能看到 <code>dbg!</code> 打印出的信息</p>
+<p><img src="./assets/ident_dbg.png" alt="ident_dbg" /></p>
+<p>如果使用 cargo expand 应该能看到我们已经创建了 <code>CommandBuilder</code> 结构体</p>
+<p><img src="assets/ident_expand.png" alt="ident_expand" /></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="builder_tips.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="builder_tips.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
