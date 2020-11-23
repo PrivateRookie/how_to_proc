@@ -168,6 +168,12 @@ pub fn derive(input: TokenStream) -> TokenStream {
 }
 ```
 
+由于我们尚未实现所需方法, 为了编译通过先把使用 builder 的 main 函数置空
+
+```rust
+fn main() {}
+```
+
 在编译使用 Builder 宏的 crate 时应该能看到 `dbg!` 打印出的信息
 
 ![ident_dbg](./assets/ident_dbg.png)
@@ -175,4 +181,12 @@ pub fn derive(input: TokenStream) -> TokenStream {
 如果使用 cargo expand 应该能看到我们已经创建了 `CommandBuilder` 结构体
 
 ![ident_expand](assets/ident_expand.png)
+
+### 遍历字段
+
+根据 DerivInput 文档, 我们可以在 .data 里获取结构体字段, 虽然 .data 有多个 enum 进行嵌套, 但这里为了方便只考虑最简单的情形, 其他情况一律抛 panic, 直到拿到 [syn::Field](https://docs.rs/syn/1.0.48/syn/struct.Field.html).
+
+对于每个 field, 可以通过 ident 和 ty 字段分别获取字段名和字段类型. executable 字段对应的 syntax tree 如下
+
+![field_dbg](assets/field_dbg.png)
 
